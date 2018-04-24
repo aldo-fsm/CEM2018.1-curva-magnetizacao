@@ -24,8 +24,10 @@ def plot_magnetization_curve(bh_curve_path):
     data_mag_flux = An*data_B
 
     i_phi = interp1d(data_mag_flux, data_i, fill_value='extrapolate')(mag_flux)
-    ax = plt.axes()
+    fig = plt.figure()
+    ax = fig.subplots(1,1)
     ax.set_xlabel('tempo (s)')
     ax.set_ylabel('corrente de excitação (A)')
-    plt.plot(t, i_phi)
-    plt.grid()
+    ax.plot(t, i_phi)
+    ax.grid()
+    return fig

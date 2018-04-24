@@ -7,10 +7,14 @@ from curva_excitacao import plot_magnetization_curve
 from matplotlib import pyplot as plt
 
 class PlotScreen(Screen):
+    graph = None
     def plot(self, bh_curve_path):
-        plot_magnetization_curve(bh_curve_path)
+        figure = plot_magnetization_curve(bh_curve_path)
         box = self.screen_manager.get_screen('plot_screen').graph_container
-        box.add_widget(FigureCanvasKivyAgg(plt.gcf()))
+        if self.graph:
+            box.remove_widget(self.graph)
+        self.graph = FigureCanvasKivyAgg(figure=figure, id='graph')
+        box.add_widget(self.graph)
 
 class Main(App):
     def build(self):
