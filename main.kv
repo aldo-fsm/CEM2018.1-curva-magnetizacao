@@ -1,0 +1,31 @@
+#: import FigureCanvasKivyAgg kivy.garden.matplotlib.backend_kivyagg
+#: import Button kivy.uix.button
+
+<ScreenManager>:
+    PlotScreen:
+        id: plot_screen
+        name: 'plot_screen'
+        screen_manager: root
+        graph_container: graph_container
+        BoxLayout:
+            orientation: 'vertical'
+            BoxLayout:
+                orientation: 'horizontal'
+                BoxLayout:
+                    orientation: 'vertical'
+                    # Spinner:
+                    #     text: "Work"
+                    #     values: "Work", "Home", "Mobile", "Skype"
+                    #     size_hint: (None, None)
+                    #     on_press: print('oi')
+                    Button:
+                        text: 'Castings Cast Iron'
+                        on_press: plot_screen.plot('bh_curves_data/Castings-Cast-Iron.xls')
+                    Button:
+                        text: 'Electrical Steel NGO 35PN250'
+                        on_press: plot_screen.plot('bh_curves_data/Electrical-Steel-NGO-35PN250.xls')
+                    Button:
+                        text: 'Low Carbon Steel SAE1020'
+                        on_press: plot_screen.plot('bh_curves_data/Low-Carbon-Steel-SAE1020.xls')
+                BoxLayout:
+                    id: graph_container
