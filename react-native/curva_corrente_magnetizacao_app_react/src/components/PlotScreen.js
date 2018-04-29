@@ -7,6 +7,7 @@ import {
 
 import { linear } from 'everpolate';
 import njs from 'numeric';
+import ChartView from 'react-native-highcharts';
 
 const cast_iron_bh_curve = require('../resources/bh_curves_data/Castings-Cast-Iron.json');
 const electrical_steel_bh_curve = require('../resources/bh_curves_data/Electrical-Steel-NGO-35PN250.json');
@@ -38,15 +39,15 @@ export default class PlotScreen extends Component{
 
         //extrai os dados do circuito
         const { Erms, f, N, lm, An, bh_curve } = this.state.circuit_data;
-
+        
         if(bh_curve){
-            const pi = Math.pi;
+            const pi = Math.PI;
             const Emax = Erms*Math.sqrt(2); // V
             const t = constants.t // s
             
             // Calcula o fluxo magnético gerado pela corrente de excitação
-            mag_flux = njs.mul(Emax/(2*N*pi*f), np.cos(njs.mul(2*pi*f,t))) // Wb
-            
+            mag_flux = njs.mul(Emax/(2*N*pi*f), njs.cos(njs.mul(2*pi*f,t))) // Wb
+
             // Extrai da curva BH os valores de B e H
             var data_H = bh_curve.H;
             var data_B = bh_curve.B;
@@ -67,26 +68,103 @@ export default class PlotScreen extends Component{
             // Calcula a corrente excitação a partir do fluxo gerado pela tensão de excitação
             // e da relação corrente-fluxo calculada a partir da curva BH
             i_phi = linear(mag_flux, data_mag_flux, data_i);
-            
+            console.log(mag_flux)
+            console.log(data_mag_flux)
+            console.log(data_i)
             this.setState({
                 mag_current: i_phi
             })
         }
     }
 
+    componentDidMount(){
+        this.calculateCurrent();
+    }
+
     render(){
         const circuit_data = this.state.circuit_data;
-        
+        const { mag_current } = this.state;
+        var Highcharts='Highcharts';
+        var conf={
+            chart: {
+                type: 'spline',
+                animation: Highcharts.svg, // don't animate in old IE
+                marginRight: 10,
+            },
+            title: {
+                text: 'Corrente de Magnetização'
+            },
+            xAxis: {
+                title: {
+                    text: 'Tempo (s)'
+                },
+                tickPixelInterval: 30
+            },
+            yAxis: {
+                title: {
+                    text: 'Corrente (A)'
+                },
+                plotLines: [{
+                    value: 0,
+                    width: 1,
+                    color: '#808080'
+                }]
+            },
+            tooltip: {
+                formatter: function () {
+                    return '<b>' + this.series.name + '</b><br/>' +
+                        't = ' + Highcharts.numberFormat(this.x, 2) + '; ' +
+                        'i = ' + Highcharts.numberFormat(this.y, 2);
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            exporting: {
+                enabled: false
+            },
+            series: [{
+                name: 'corrente de magnetização',
+                data: (function () {
+                    var data = [], i = 0;
+                    if(mag_current){
+                        for (i = 0; i < constants.t.length; i += 1) {
+                            data.push({
+                                x: constants.t[i],
+                                y: mag_current[i]
+                            });
+                        }
+                    }
+                    return data;
+                }())
+            }]
+        };
+    
+        const options = {
+            global: {
+                useUTC: false
+            },
+            lang: {
+                decimalPoint: ',',
+                thousandsSep: '.'
+            }
+        };
         return (
             <View>
                 <Picker
                     selectedValue={this.state.bh_curve}
                     style={{ height: 50, width: 100 }}
-                    onValueChange={(itemValue, itemIndex) => this.setState({circuit_data:{...circuit_data, bh_curve: itemValue}})}>
-                    <Picker.Item label="Castings-   Cast-Iron" value={cast_iron_bh_curve} />
+                    onValueChange={(itemValue, itemIndex) => {
+                        this.calculateCurrent();
+                        this.setState({circuit_data:{...circuit_data, bh_curve: itemValue}})
+                        }}>
+                    <Picker.Item label="Castings-Cast-Iron" value={cast_iron_bh_curve} />
                     <Picker.Item label="Electrical-Steel-NGO-35PN250" value={electrical_steel_bh_curve} />
                     <Picker.Item label="Low-Carbon-Steel-SAE1020" value={low_carbon_steel_bh_curve} />
                 </Picker>
+                <View>
+                    <ChartView style={{height:300}} config={conf} options={options}></ChartView>
+                </View>
             </View>
         )
     }
