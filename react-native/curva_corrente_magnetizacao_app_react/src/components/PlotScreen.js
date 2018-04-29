@@ -3,6 +3,8 @@ import {
     View,
     Image,
     Picker,
+    StyleSheet,
+    Slider
 } from 'react-native';
 
 import { linear } from 'everpolate';
@@ -28,7 +30,7 @@ export default class PlotScreen extends Component{
                 N: 400, // espiras
                 lm: 0.35, // m
                 An: 0.0008, // m
-                bh_curve: props.bh_curve
+                material: 'cast-iron'
             },
             mag_current: undefined
         }
@@ -38,9 +40,21 @@ export default class PlotScreen extends Component{
     calculateCurrent(){
 
         //extrai os dados do circuito
-        const { Erms, f, N, lm, An, bh_curve } = this.state.circuit_data;
+        const { Erms, f, N, lm, An, material } = this.state.circuit_data;
         
-        if(bh_curve){
+        if(material){
+
+            var bh_curve;
+            if(material === 'cast-iron'){
+                bh_curve = cast_iron_bh_curve;
+            } else if(material === 'electrical-steel'){
+                bh_curve = electrical_steel_bh_curve;
+            } else if(material === 'low-carbon'){
+                bh_curve = low_carbon_steel_bh_curve;
+            } else{
+                return null;
+            }
+
             const pi = Math.PI;
             const Emax = Erms*Math.sqrt(2); // V
             const t = constants.t // s
@@ -68,13 +82,10 @@ export default class PlotScreen extends Component{
             // Calcula a corrente excitação a partir do fluxo gerado pela tensão de excitação
             // e da relação corrente-fluxo calculada a partir da curva BH
             i_phi = linear(mag_flux, data_mag_flux, data_i);
-            console.log(mag_flux)
-            console.log(data_mag_flux)
-            console.log(data_i)
-            this.setState({
-                mag_current: i_phi
-            })
+
+            return i_phi;
         }
+        return null;
     }
 
     componentDidMount(){
@@ -83,7 +94,8 @@ export default class PlotScreen extends Component{
 
     render(){
         const circuit_data = this.state.circuit_data;
-        const { mag_current } = this.state;
+        const mag_current = this.calculateCurrent();
+        console.log(mag_current)
         var Highcharts='Highcharts';
         var conf={
             chart: {
@@ -150,22 +162,31 @@ export default class PlotScreen extends Component{
             }
         };
         return (
-            <View>
-                <Picker
-                    selectedValue={this.state.bh_curve}
-                    style={{ height: 50, width: 100 }}
-                    onValueChange={(itemValue, itemIndex) => {
-                        this.calculateCurrent();
-                        this.setState({circuit_data:{...circuit_data, bh_curve: itemValue}})
-                        }}>
-                    <Picker.Item label="Castings-Cast-Iron" value={cast_iron_bh_curve} />
-                    <Picker.Item label="Electrical-Steel-NGO-35PN250" value={electrical_steel_bh_curve} />
-                    <Picker.Item label="Low-Carbon-Steel-SAE1020" value={low_carbon_steel_bh_curve} />
-                </Picker>
-                <View>
+            <View style={styles.container}>
+                <View style={styles.chartContainer}>
                     <ChartView style={{height:300}} config={conf} options={options}></ChartView>
                 </View>
+                <Picker
+                    selectedValue={circuit_data.material}
+                    style={styles.picker}
+                    onValueChange={(itemValue, itemIndex) => this.setState({circuit_data:{...circuit_data, material: itemValue}})}>
+                    <Picker.Item label="Castings-Cast-Iron" value={'cast-iron'} />
+                    <Picker.Item label="Electrical-Steel-NGO-35PN250" value={'electrical-steel'} />
+                    <Picker.Item label="Low-Carbon-Steel-SAE1020" value={'low-carbon'} />
+                </Picker>
             </View>
         )
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        backgroundColor: 'white',
+        padding: 10,
+        flex: 1
+    },
+    chartContainer: {
+    },
+    picker: {
+    }
+})
