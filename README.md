@@ -1,2 +1,0 @@
-# curva-corrente-magnetizacao
-
