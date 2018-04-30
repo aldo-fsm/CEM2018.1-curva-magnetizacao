@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import {
     View,
+    ScrollView,
     Image,
     Picker,
     StyleSheet,
-    Slider
+    Slider,
+    Text
 } from 'react-native';
 
 import { linear } from 'everpolate';
@@ -32,7 +34,10 @@ export default class PlotScreen extends Component{
                 An: 0.0008, // m
                 material: 'cast-iron'
             },
-            mag_current: undefined
+            mag_current: undefined,
+            Erms_sliderLabelValue: 220,
+            f_sliderLabelValue: 60,
+            N_sliderLabelValue: 400,
         }
     }
 
@@ -163,17 +168,61 @@ export default class PlotScreen extends Component{
         };
         return (
             <View style={styles.container}>
-                <View style={styles.chartContainer}>
-                    <ChartView style={{height:300}} config={conf} options={options}></ChartView>
-                </View>
-                <Picker
-                    selectedValue={circuit_data.material}
-                    style={styles.picker}
-                    onValueChange={(itemValue, itemIndex) => this.setState({circuit_data:{...circuit_data, material: itemValue}})}>
-                    <Picker.Item label="Castings-Cast-Iron" value={'cast-iron'} />
-                    <Picker.Item label="Electrical-Steel-NGO-35PN250" value={'electrical-steel'} />
-                    <Picker.Item label="Low-Carbon-Steel-SAE1020" value={'low-carbon'} />
-                </Picker>
+                <ScrollView>
+                    <View style={styles.chartContainer}>
+                        <ChartView style={{height:300}} config={conf} options={options}></ChartView>
+                    </View>
+                    <View style={{ flex: 1, alignItems: 'center', flexDirection: 'row'}}>
+                        <Text>Material</Text>
+                        <Picker
+                            selectedValue={circuit_data.material}
+                            style={styles.picker}
+                            onValueChange={(itemValue, itemIndex) => this.setState({circuit_data:{...circuit_data, material: itemValue}})}>
+                            <Picker.Item label="Castings-Cast-Iron" value={'cast-iron'} />
+                            <Picker.Item label="Electrical-Steel-NGO-35PN250" value={'electrical-steel'} />
+                            <Picker.Item label="Low-Carbon-Steel-SAE1020" value={'low-carbon'} />
+                        </Picker>
+                    </View>
+                    <View style={styles.sliderContainer}>
+                        <Text>Tensão</Text>
+                        <Slider
+                            style={styles.slider}
+                            minimumValue={100}
+                            maximumValue={300}
+                            step={1}
+                            value={circuit_data.Erms}
+                            onValueChange={value => this.setState({ Erms_sliderLabelValue: value})}
+                            onSlidingComplete={value => this.setState({circuit_data:{...circuit_data, Erms: value}})}
+                        />
+                        <Text>{this.state.Erms_sliderLabelValue} V</Text>
+                    </View>
+                    <View style={styles.sliderContainer}>
+                        <Text>Frequência</Text>
+                        <Slider
+                            style={styles.slider}
+                            minimumValue={10}
+                            maximumValue={110}
+                            step={1}
+                            value={circuit_data.f}
+                            onValueChange={value => this.setState({ f_sliderLabelValue: value})}
+                            onSlidingComplete={value => this.setState({circuit_data:{...circuit_data, f: value}})}
+                        />
+                        <Text>{this.state.f_sliderLabelValue} Hz</Text>
+                    </View>
+                    <View style={styles.sliderContainer}>
+                        <Text>N° Espiras</Text>
+                        <Slider
+                            style={styles.slider}
+                            minimumValue={300}
+                            maximumValue={500}
+                            step={1}
+                            value={circuit_data.N}
+                            onValueChange={value => this.setState({ N_sliderLabelValue: value})}
+                            onSlidingComplete={value => this.setState({circuit_data:{...circuit_data, N: value}})}
+                        />
+                        <Text>{this.state.N_sliderLabelValue} espiras</Text>
+                    </View>
+                </ScrollView>
             </View>
         )
     }
@@ -182,11 +231,23 @@ export default class PlotScreen extends Component{
 const styles = StyleSheet.create({
     container: {
         backgroundColor: 'white',
-        padding: 10,
+        paddingHorizontal: 10,
+        paddingBottom: 10,
         flex: 1
     },
     chartContainer: {
+        marginTop: 10
+    },
+    slider: {
+        flex:1
+    },
+    sliderContainer: {
+        flex: 1,
+        flexDirection: 'row',
+        marginTop: 15,
     },
     picker: {
+        flex: 1
     }
+
 })
